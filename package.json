@@ -12,7 +12,9 @@
     "lint:fix": "eslint --fix .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "keywords": [],
   "author": "Ivan Rizky Saputra",
@@ -31,7 +33,11 @@
     ]
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "drizzle-orm": "^0.40.0",
+    "express": "^4.21.2",
+    "http-status-codes": "^2.3.0",
+    "pg": "^8.13.3",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
@@ -39,6 +45,8 @@
     "@tsconfig/node22": "^22.0.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.7",
+    "@types/pg": "^8.11.11",
+    "drizzle-kit": "^0.30.5",
     "eslint": "^9.21.0",
     "eslint-plugin-perfectionist": "^4.9.0",
     "husky": "^9.1.7",
