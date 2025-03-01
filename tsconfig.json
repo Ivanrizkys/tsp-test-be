@@ -2,10 +2,13 @@
   "extends": "@tsconfig/node22/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "#/*": ["./src/*"]
+    }
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "drizzle.config.ts"],
   "exclude": ["dist"]
 }
