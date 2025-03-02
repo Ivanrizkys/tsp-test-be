@@ -1,3 +1,10 @@
+export interface DecodedToken {
+  email: string;
+  id: number;
+  name: string;
+  permissions: string[];
+}
+
 export interface Meta {
   message: string;
 }

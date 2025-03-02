@@ -18,7 +18,9 @@ export const usersTable = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   password: varchar("password", { length: 255 }).notNull(),
-  roleId: integer("role_id").references(() => userRolesTable.id, { onDelete: "cascade" }),
+  roleId: integer("role_id")
+    .references(() => userRolesTable.id, { onDelete: "cascade" })
+    .notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()

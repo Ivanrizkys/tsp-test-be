@@ -1,4 +1,4 @@
-import { Meta, Response } from "#/common/types/index.ts";
+import { Meta, Response } from "#/common/model/index.ts";
 import { Response as ExpressResponse } from "express";
 import { StatusCodes } from "http-status-codes";
 

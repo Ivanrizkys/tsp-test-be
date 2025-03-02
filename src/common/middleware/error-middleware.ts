@@ -1,19 +1,18 @@
 import { ResponseError } from "#/common/error/response-error.ts";
-import { Request, Response } from "express";
+import { sendResponseFailure } from "#/common/utils/send-response.ts";
+import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 
-export const errorMiddleware = async (error: Error, req: Request, res: Response) => {
+export const errorMiddleware = async (error: Error, req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) {
+    return next(error);
+  }
+
   if (error instanceof ZodError) {
-    res.status(400).json({
-      errors: `Validation Error : ${JSON.stringify(error)}`,
-    });
+    sendResponseFailure(res, 400, `Validation Error : ${JSON.stringify(error.flatten().fieldErrors)}`);
   } else if (error instanceof ResponseError) {
-    res.status(error.status).json({
-      errors: error.message,
-    });
+    sendResponseFailure(res, error.status, error.message);
   } else {
-    res.status(500).json({
-      errors: error.message,
-    });
+    sendResponseFailure(res, 500, error.message);
   }
 };
