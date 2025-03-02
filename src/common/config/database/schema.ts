@@ -3,7 +3,7 @@ import { integer, jsonb, pgTable, serial, text, timestamp, uuid, varchar } from 
 
 export const userRolesTable = pgTable("user_roles", {
   id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
   permissions: jsonb("permissions").notNull().$type<string[]>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
@@ -31,7 +31,7 @@ export const usersTable = pgTable("users", {
 export const workOrderStatusTable = pgTable("work_order_status", {
   id: serial("id").primaryKey(),
   uuid: uuid("uuid").notNull().unique().defaultRandom(),
-  name: varchar("name", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
