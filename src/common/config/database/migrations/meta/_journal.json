@@ -36,6 +36,13 @@
       "when": 1740986894389,
       "tag": "0004_regular_lady_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1740988487355,
+      "tag": "0005_clumsy_puma",
+      "breakpoints": true
     }
   ]
 }

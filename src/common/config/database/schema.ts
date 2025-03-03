@@ -53,7 +53,10 @@ export const workOrderTable = pgTable("work_orders", {
   dueDate: timestamp("due_date").notNull(),
   actualCompletionDate: timestamp("actual_completion_date"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 export const workOrderStatusHistoryTable = pgTable("work_order_status_history", {
@@ -67,6 +70,7 @@ export const workOrderStatusHistoryTable = pgTable("work_order_status_history", 
     .notNull(),
   note: text("note"),
   quantityProduced: integer("quantity_produced"),
+  executeTimeSeconds: integer("execute_time_seconds"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   createdBy: integer("created_by")
     .references(() => usersTable.id, { onDelete: "cascade" })
