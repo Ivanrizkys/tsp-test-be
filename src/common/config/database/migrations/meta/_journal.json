@@ -22,6 +22,20 @@
       "when": 1740906013228,
       "tag": "0002_free_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1740983429670,
+      "tag": "0003_amused_tinkerer",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1740986894389,
+      "tag": "0004_regular_lady_bullseye",
+      "breakpoints": true
     }
   ]
 }

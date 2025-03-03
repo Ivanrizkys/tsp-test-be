@@ -1,0 +1,1 @@
+ALTER TABLE "work_orders" ADD COLUMN "product_name" varchar(255) NOT NULL;
