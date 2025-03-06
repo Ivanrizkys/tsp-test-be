@@ -1,6 +1,6 @@
-import db, { DB } from "#/common/config/database/connection.ts";
-import { InsertUsers, UserRoles, userRolesTable, Users, usersTable } from "#/common/config/database/schema.ts";
-import { takeUniqueOrThrow } from "#/common/utils/index.ts";
+import db, { DB } from "#/common/config/database/connection.js";
+import { InsertUsers, UserRoles, userRolesTable, Users, usersTable } from "#/common/config/database/schema.js";
+import { takeUniqueOrThrow } from "#/common/utils/index.js";
 import { eq } from "drizzle-orm";
 
 export class AuthRepository {

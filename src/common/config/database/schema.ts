@@ -1,7 +1,7 @@
 /* eslint-disable perfectionist/sort-objects */
 import { integer, jsonb, pgTable, serial, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-const utcPlus7 = () => {
+export const utcPlus7 = () => {
   const date = new Date();
   return new Date(date.getTime() + 7 * 60 * 60 * 1000);
 };

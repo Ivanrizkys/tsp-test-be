@@ -1,12 +1,12 @@
-import { ResponseError } from "#/common/error/response-error.ts";
-import { DecodedToken } from "#/common/model/index.ts";
-import { Validate } from "#/common/utils/validation.ts";
+import { ResponseError } from "#/common/error/response-error.js";
+import { DecodedToken } from "#/common/model/index.js";
+import { Validate } from "#/common/utils/validation.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from "./auth-model.ts";
-import { AuthRepository } from "./auth-repository.ts";
-import { LoginRequestSchema, RegisterRequestSchema } from "./auth-validation.ts";
+import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from "./auth-model.js";
+import { AuthRepository } from "./auth-repository.js";
+import { LoginRequestSchema, RegisterRequestSchema } from "./auth-validation.js";
 
 export class AuthService {
   private readonly authRepository: AuthRepository;
@@ -51,13 +51,12 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(validatedRequest.password, 10);
-    const userRole = await this.authRepository.getUserRoleById(1);
 
     const newOperator = await this.authRepository.createUser({
       email: validatedRequest.email,
       name: validatedRequest.name,
       password: hashedPassword,
-      roleId: userRole.id,
+      roleId: 2,
     });
     return {
       user: {

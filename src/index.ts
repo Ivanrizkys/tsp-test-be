@@ -1,6 +1,7 @@
-import { authRouter } from "#/api/auth/auth-router.ts";
-import { healthCheckRouter } from "#/api/health-check/health-check-router.ts";
-import { errorMiddleware } from "#/common/middleware/error-middleware.ts";
+import { authRouter } from "#/api/auth/auth-router.js";
+import { healthCheckRouter } from "#/api/health-check/health-check-router.js";
+import { workOrderRouter } from "#/api/work-order/work-order-router.js";
+import { errorMiddleware } from "#/common/middleware/error-middleware.js";
 import express from "express";
 
 const app = express();
@@ -10,6 +11,7 @@ app.use(express.json());
 
 app.use("/health-check", healthCheckRouter);
 app.use("/auth", authRouter);
+app.use("/work-orders", workOrderRouter);
 
 app.use(errorMiddleware);
 

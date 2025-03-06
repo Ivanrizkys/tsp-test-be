@@ -1,5 +1,5 @@
-import { ResponseError } from "#/common/error/response-error.ts";
-import { sendResponseFailure } from "#/common/utils/send-response.ts";
+import { ResponseError } from "#/common/error/response-error.js";
+import { sendResponseFailure } from "#/common/utils/send-response.js";
 import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 

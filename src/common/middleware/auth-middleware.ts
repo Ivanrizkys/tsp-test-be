@@ -1,8 +1,8 @@
 import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { ResponseError } from "../error/response-error.ts";
-import { DecodedToken, UserRequest } from "../model/index.ts";
+import { ResponseError } from "../error/response-error.js";
+import { DecodedToken, UserRequest } from "../model/index.js";
 
 export const authenticate = (req: UserRequest, res: Response, next: NextFunction) => {
   try {
@@ -17,9 +17,13 @@ export const authenticate = (req: UserRequest, res: Response, next: NextFunction
     if (splitToken[0] !== "Bearer") {
       throw new ResponseError(403, "Token must be Bearer type");
     }
-    const decoded = jwt.verify(splitToken[1], process.env.JWT_SECRET!);
-    req.user = decoded as DecodedToken;
-    next();
+    try {
+      const decoded = jwt.verify(splitToken[1], process.env.JWT_SECRET!);
+      req.user = decoded as DecodedToken;
+      next();
+    } catch (error) {
+      throw new ResponseError(403, (error as Error)?.message ?? "Invalid token");
+    }
   } catch (error) {
     next(error);
   }
@@ -31,7 +35,10 @@ export const authorize = (permissions: string[]) => {
       next();
       return;
     }
-    const userPermissions = req.user.permissions;
+    const userPermissions = req.user?.permissions;
+    if (!userPermissions) {
+      throw new ResponseError(403, "You are not authorized to access this resource");
+    }
     const hasPermission = permissions.some((permission) => userPermissions.includes(permission));
     if (!hasPermission) {
       throw new ResponseError(403, "You are not authorized to access this resource");

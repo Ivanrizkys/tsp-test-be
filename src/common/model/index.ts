@@ -27,5 +27,5 @@ export interface Response<TData, TMeta> {
 }
 
 export interface UserRequest extends Request {
-  user: DecodedToken;
+  user?: DecodedToken;
 }
