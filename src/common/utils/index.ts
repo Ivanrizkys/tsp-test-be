@@ -4,7 +4,7 @@
  *
  * @template T - The type of elements in the array
  * @param {string} message - The error message to display if the array doesn't contain exactly one element
- * @returns {function(T[]): T} - A function that takes an array and returns its single element
+ * @returns {function(T[]): null | T} - A function that takes an array and returns its single element or null
  * @throws {Error} - If the array is empty or contains multiple elements
  *
  * @example
@@ -12,9 +12,9 @@
  * const user = getSingleUser(users); // Throws if users.length !== 1
  */
 export const takeUniqueOrThrow = (message: string) => {
-  return <T>(values: T[]): T => {
-    if (values.length !== 1) throw new Error(`Found non unique or inexistent value: ${message}`);
-    return values[0]!;
+  return <T>(values: T[]): null | T => {
+    if (values.length > 1) throw new Error(`Found non unique value: ${message}`);
+    return values.length > 0 ? values[0] : null;
   };
 };
 
