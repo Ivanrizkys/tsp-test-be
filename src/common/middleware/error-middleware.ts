@@ -13,6 +13,7 @@ export const errorMiddleware = async (error: Error, req: Request, res: Response,
   } else if (error instanceof ResponseError) {
     sendResponseFailure(res, error.status, error.message);
   } else {
-    sendResponseFailure(res, 500, error.message);
+    console.log(error);
+    sendResponseFailure(res, 500, "INTERNAL SERVER ERROR");
   }
 };
