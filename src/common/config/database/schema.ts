@@ -1,6 +1,11 @@
 /* eslint-disable perfectionist/sort-objects */
 import { integer, jsonb, pgTable, serial, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
+const utcPlus7 = () => {
+  const date = new Date();
+  return new Date(date.getTime() + 7 * 60 * 60 * 1000);
+};
+
 export const userRolesTable = pgTable("user_roles", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull().unique(),
@@ -8,8 +13,8 @@ export const userRolesTable = pgTable("user_roles", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
+    .default(utcPlus7())
+    .$onUpdate(() => utcPlus7()),
 });
 
 export const usersTable = pgTable("users", {
@@ -24,8 +29,8 @@ export const usersTable = pgTable("users", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
+    .default(utcPlus7())
+    .$onUpdate(() => utcPlus7()),
 });
 
 export const workOrderStatusTable = pgTable("work_order_status", {
@@ -35,8 +40,8 @@ export const workOrderStatusTable = pgTable("work_order_status", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
+    .default(utcPlus7())
+    .$onUpdate(() => utcPlus7()),
 });
 
 export const workOrderTable = pgTable("work_orders", {
@@ -52,11 +57,12 @@ export const workOrderTable = pgTable("work_orders", {
     .notNull(),
   dueDate: timestamp("due_date").notNull(),
   actualCompletionDate: timestamp("actual_completion_date"),
+  actualQuantity: integer("actual_quantity"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
+    .default(utcPlus7())
+    .$onUpdate(() => utcPlus7()),
 });
 
 export const workOrderStatusHistoryTable = pgTable("work_order_status_history", {
