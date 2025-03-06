@@ -5,6 +5,7 @@ export interface DecodedToken {
   id: number;
   name: string;
   permissions: string[];
+  role: number;
 }
 
 export interface Meta {
