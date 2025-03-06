@@ -26,11 +26,15 @@ export class AuthService {
       throw new ResponseError(401, "Invalid email or password");
     }
     const userRole = await this.authRepository.getUserRoleById(user.roleId);
+    if (!userRole) {
+      throw new ResponseError(401, "Invalid email or password");
+    }
     const claims: DecodedToken = {
       email: user.email,
       id: user.id,
       name: user.name,
       permissions: userRole.permissions,
+      role: userRole.id,
     };
     const token = jwt.sign(claims, process.env.JWT_SECRET!, { expiresIn: "6h" });
     return {
