@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx --watch --env-file .env src/index.ts",
-    "start": "node dist/index.js",
+    "start": "node --experimental-loader ./resolver.js dist/src/index.js",
     "build": "npx tsc",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
