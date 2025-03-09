@@ -1,21 +1,15 @@
 /* eslint-disable perfectionist/sort-objects */
 import { integer, jsonb, pgTable, serial, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-export const utcPlus7 = () => {
-  const date = new Date();
-  const utcPlus7Date = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-  return utcPlus7Date;
-};
-
 export const userRolesTable = pgTable("user_roles", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull().unique(),
   permissions: jsonb("permissions").notNull().$type<string[]>(),
-  createdAt: timestamp("created_at").notNull().default(utcPlus7()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
-    .default(utcPlus7())
-    .$onUpdate(() => utcPlus7()),
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 export const usersTable = pgTable("users", {
@@ -27,22 +21,22 @@ export const usersTable = pgTable("users", {
   roleId: integer("role_id")
     .references(() => userRolesTable.id, { onDelete: "cascade" })
     .notNull(),
-  createdAt: timestamp("created_at").notNull().default(utcPlus7()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
-    .default(utcPlus7())
-    .$onUpdate(() => utcPlus7()),
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 export const workOrderStatusTable = pgTable("work_order_status", {
   id: serial("id").primaryKey(),
   uuid: uuid("uuid").notNull().unique().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull().unique(),
-  createdAt: timestamp("created_at").notNull().default(utcPlus7()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
-    .default(utcPlus7())
-    .$onUpdate(() => utcPlus7()),
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 export const workOrderTable = pgTable("work_orders", {
@@ -59,11 +53,11 @@ export const workOrderTable = pgTable("work_orders", {
   dueDate: timestamp("due_date").notNull(),
   actualCompletionDate: timestamp("actual_completion_date"),
   actualQuantity: integer("actual_quantity"),
-  createdAt: timestamp("created_at").notNull().default(utcPlus7()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
-    .default(utcPlus7())
-    .$onUpdate(() => utcPlus7()),
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
 export const workOrderStatusHistoryTable = pgTable("work_order_status_history", {
@@ -78,7 +72,7 @@ export const workOrderStatusHistoryTable = pgTable("work_order_status_history", 
   note: text("note"),
   quantityProduced: integer("quantity_produced"),
   executeTimeSeconds: integer("execute_time_seconds"),
-  createdAt: timestamp("created_at").notNull().default(utcPlus7()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   createdBy: integer("created_by")
     .references(() => usersTable.id, { onDelete: "cascade" })
     .notNull(),
@@ -91,7 +85,7 @@ export const workOrderInProgressHistoryTable = pgTable("work_order_in_progress_h
   workOrderId: integer("work_order_id")
     .references(() => workOrderTable.id, { onDelete: "cascade" })
     .notNull(),
-  createdAt: timestamp("created_at").notNull().default(utcPlus7()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   createdBy: integer("created_by")
     .references(() => usersTable.id, { onDelete: "cascade" })
     .notNull(),
