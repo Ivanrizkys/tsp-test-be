@@ -1,15 +1,12 @@
 /**
- * Takes an array and ensures it contains exactly one element, returning that element.
- * Throws an error if the array doesn't contain exactly one element.
- *
+ * Takes an array and ensures it contains at most one element, throwing an error if multiple elements are found
  * @template T - The type of elements in the array
- * @param {string} message - The error message to display if the array doesn't contain exactly one element
- * @returns {function(T[]): null | T} - A function that takes an array and returns its single element or null
- * @throws {Error} - If the array is empty or contains multiple elements
- *
- * @example
- * const getSingleUser = takeUniqueOrThrow("User");
- * const user = getSingleUser(users); // Throws if users.length !== 1
+ * @param {string} message - The error message to display if multiple elements are found
+ * @returns {function(T[]): T | null} A function that:
+ *   - Throws an error if the input array has more than one element
+ *   - Returns the single element if array has exactly one element
+ *   - Returns null if the array is empty
+ * @throws {Error} If the input array contains more than one element
  */
 export const takeUniqueOrThrow = (message: string) => {
   return <T>(values: T[]): null | T => {
@@ -42,41 +39,4 @@ export const generateWorkOrderNumber = () => {
 
   // Create work order number
   return `WO-${dateTimeString}-${timestamp}`;
-};
-
-/**
- * Calculates the difference in seconds between two dates, returning an integer value.
- *
- * @param {Date} date1 - The first date
- * @param {Date} date2 - The second date
- * @returns {number} The absolute difference in seconds (integer) between the two dates
- * @example
- * // Calculate difference between two specific dates
- * const startDate = new Date('2025-03-01T10:00:00');
- * const endDate = new Date('2025-03-01T10:05:30');
- * const diffInSeconds = getSecondsBetweenDates(startDate, endDate);
- * console.log(diffInSeconds); // Outputs: 330 (5 minutes and 30 seconds)
- *
- * @example
- * // Calculate time taken by an operation
- * const start = new Date();
- * // ... some operation ...
- * const end = new Date();
- * console.log(`Operation took ${getSecondsBetweenDates(start, end)} seconds`);
- */
-export const getSecondsBetweenDates = (date1: Date, date2: Date): number => {
-  // Convert both dates to milliseconds
-  const date1Ms: number = date1.getTime();
-  const date2Ms: number = date2.getTime();
-
-  // Calculate the difference in milliseconds
-  const differenceMs: number = Math.abs(date2Ms - date1Ms);
-
-  // Convert milliseconds to seconds
-  return Math.floor(differenceMs / 1000);
-};
-
-export const dateNowWithUtcPlus7 = () => {
-  const date = new Date();
-  return new Date(date.getTime() + 7 * 60 * 60 * 1000);
 };
