@@ -8,21 +8,21 @@ export const authenticate = (req: UserRequest, res: Response, next: NextFunction
   try {
     const token = req.get("Authorization");
     if (!token) {
-      throw new ResponseError(403, "Token is required");
+      throw new ResponseError(401, "Token is required");
     }
     const splitToken = token.split(" ");
     if (splitToken.length !== 2) {
-      throw new ResponseError(403, "Invalid token format");
+      throw new ResponseError(401, "Invalid token format");
     }
     if (splitToken[0] !== "Bearer") {
-      throw new ResponseError(403, "Token must be Bearer type");
+      throw new ResponseError(401, "Token must be Bearer type");
     }
     try {
       const decoded = jwt.verify(splitToken[1], process.env.JWT_SECRET!);
       req.user = decoded as DecodedToken;
       next();
     } catch (error) {
-      throw new ResponseError(403, (error as Error)?.message ?? "Invalid token");
+      throw new ResponseError(401, (error as Error)?.message ?? "Invalid token");
     }
   } catch (error) {
     next(error);
