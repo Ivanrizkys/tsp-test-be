@@ -24,6 +24,38 @@ export class WorkOrderController {
       next(error);
     }
   };
+  public deleteBulkWorkOrder: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const deletedWorkOrders = await this.workOrderService.deleteBulkWorkOrder(req.body);
+      sendResponseSuccess(res, 200, deletedWorkOrders, {
+        message: "Delete bulk work orders successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+  public deleteWorkOrder: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const deletedWorkOrder = await this.workOrderService.deleteWorkOrder({
+        work_order_id: Number(req.params.workOrderId),
+      });
+      sendResponseSuccess(res, 200, deletedWorkOrder, {
+        message: `Delete work order with id ${deletedWorkOrder.id} succesfully`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+  public getOperatorWorkOrderStats: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const operatorWorkOrderStats = await this.workOrderService.getOperatorWorkOrderStats();
+      sendResponseSuccess(res, 200, operatorWorkOrderStats, {
+        message: "Get operator work order report succesfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
   public getWorkOrderDetail: RequestHandler = async (req: UserRequest, res: Response, next: NextFunction) => {
     try {
       const workOrderDetail = await this.workOrderService.getWorkOrderDetail(req.user!, {

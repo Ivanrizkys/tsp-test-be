@@ -2,11 +2,15 @@ import db from "#/common/config/database/connection.js";
 import { InsertWorkOrder, InsertWorkOrderInProgressHistory, InsertWorkOrderStatusHistory } from "#/common/config/database/schema.js";
 import { ResponseError } from "#/common/error/response-error.js";
 import { DecodedToken, Pageable } from "#/common/model/index.js";
-import { dateNowWithUtcPlus7, generateWorkOrderNumber, getSecondsBetweenDates } from "#/common/utils/index.js";
+import { generateWorkOrderNumber } from "#/common/utils/index.js";
 import { Validate } from "#/common/utils/validation.js";
+import { differenceInSeconds } from "date-fns";
 
 import {
   CreateWorkOrderRequest,
+  DeleteBulkWorkOrderRequest,
+  DeleteWorkOrderParams,
+  GetOperatorWorkOrderStats,
   GetWorkOrderDetailParams,
   GetWorkOrderDetailResponse,
   GetWorkOrderParams,
@@ -18,6 +22,8 @@ import {
 import { WorkOrderRepository } from "./work-order-repository.js";
 import {
   CreateWorkOrderRequestSchema,
+  DeleteWorkOrderBulkRequestSchema,
+  DeleteWorkOrderParamsSchema,
   GetWorkOrderDetailParamsSchema,
   GetWorkOrderParamsSchema,
   UpdateWorkOrderManagerRequestSchema,
@@ -59,9 +65,6 @@ export class WorkOrderService {
       workOrderId: createdWorkOrder.id,
       ...(validatedRequest.note ? { none: validatedRequest.note } : {}),
     };
-    if (validatedRequest.note) {
-      workOrderStatusHistory.note = validatedRequest.note;
-    }
     await this.workOrderRepository.insertWorkOrderStatusHistory(workOrderStatusHistory);
 
     const workOrderResponse: WorkOrder = {
@@ -85,6 +88,71 @@ export class WorkOrderService {
     return workOrderResponse;
   }
 
+  async deleteBulkWorkOrder(body: DeleteBulkWorkOrderRequest): Promise<Partial<WorkOrder>[]> {
+    const validatedBody = Validate(DeleteWorkOrderBulkRequestSchema, body);
+
+    const workOrdersExist = await this.workOrderRepository.getWorkOrderByIds(validatedBody.work_order_ids);
+    if (!workOrdersExist || workOrdersExist.length < 1) {
+      throw new ResponseError(404, `Work order with id ${validatedBody.work_order_ids.join(", ")} not found`);
+    }
+
+    const deletedWorkOrders = await this.workOrderRepository.deleteWorkorderBulkById(validatedBody.work_order_ids);
+    const response: Partial<WorkOrder>[] = [];
+    if (deletedWorkOrders.length > 0) {
+      for (const deletedData of deletedWorkOrders) {
+        response.push({
+          actual_completion_date: deletedData.actualCompletionDate,
+          created_at: deletedData.createdAt,
+          due_date: deletedData.dueDate,
+          expected_quantity: deletedData.expectedQuantity,
+          id: deletedData.id,
+          order_number: deletedData.orderNumber,
+          product_name: deletedData.productName,
+          updated_at: deletedData.updatedAt,
+        });
+      }
+    }
+    return response;
+  }
+
+  async deleteWorkOrder(params: DeleteWorkOrderParams): Promise<Partial<WorkOrder>> {
+    const validatedParams = Validate(DeleteWorkOrderParamsSchema, params);
+
+    const workOrderExist = await this.workOrderRepository.getWorkOrderById(params.work_order_id);
+    if (!workOrderExist) {
+      throw new ResponseError(404, `Work order with id ${validatedParams.work_order_id} not found`);
+    }
+
+    const deletedWorkOrder = await this.workOrderRepository.deleteWorkOrderById(validatedParams.work_order_id);
+    const response: Partial<WorkOrder> = {
+      actual_completion_date: deletedWorkOrder.actualCompletionDate,
+      created_at: deletedWorkOrder.createdAt,
+      due_date: deletedWorkOrder.dueDate,
+      expected_quantity: deletedWorkOrder.expectedQuantity,
+      id: deletedWorkOrder.id,
+      order_number: deletedWorkOrder.orderNumber,
+      product_name: deletedWorkOrder.productName,
+      updated_at: deletedWorkOrder.updatedAt,
+    };
+    return response;
+  }
+
+  async getOperatorWorkOrderStats(): Promise<GetOperatorWorkOrderStats[]> {
+    const stats = await this.workOrderRepository.operatorWorkOrderStats();
+    const res: GetOperatorWorkOrderStats[] = stats.map((value) => ({
+      canceled_count: value.canceledCount,
+      completed_count: value.completedCount,
+      email: value.email,
+      id: value.id,
+      in_progress_count: value.inProgressCount,
+      name: value.name,
+      pending_count: value.pendingCount,
+      total_count: value.totalCount,
+      uuid: value.uuid,
+    }));
+    return res;
+  }
+
   async getWorkOrderDetail(user: DecodedToken, params: GetWorkOrderDetailParams): Promise<GetWorkOrderDetailResponse> {
     const validatedParams = Validate(GetWorkOrderDetailParamsSchema, params);
     const workOrder =
@@ -95,7 +163,7 @@ export class WorkOrderService {
       throw new ResponseError(404, `Work order with id ${validatedParams.work_order_id} not found`);
     }
     const statusHistory = await this.workOrderRepository.getStatusHistoryByWoIdWithUser(params.work_order_id);
-    const inProgressHistory = await this.workOrderRepository.getInProgressHistoryByWoId(params.work_order_id);
+    const inProgressHistory = await this.workOrderRepository.getInProgressHistoryByWoIdWithUser(params.work_order_id);
     const response: GetWorkOrderDetailResponse = {
       actual_completion_date: workOrder.work_orders.actualCompletionDate,
       actual_quantity: workOrder.work_orders.actualQuantity,
@@ -109,11 +177,15 @@ export class WorkOrderService {
       expected_quantity: workOrder.work_orders.expectedQuantity,
       id: workOrder.work_orders.id,
       in_progress_history: inProgressHistory.map((value) => ({
-        created_at: value.createdAt,
-        created_by: value.createdBy,
-        id: value.id,
-        name: value.progressName,
-        uuid: value.uuid,
+        created_at: value.work_order_in_progress_history.createdAt,
+        created_by: {
+          id: value.users!.id,
+          name: value.users!.name,
+          role_id: value.users!.roleId,
+        },
+        id: value.work_order_in_progress_history.id,
+        name: value.work_order_in_progress_history.progressName,
+        uuid: value.work_order_in_progress_history.uuid,
       })),
       operator: {
         id: workOrder.users!.id,
@@ -131,6 +203,7 @@ export class WorkOrderService {
         id: value.work_order_status_history.id,
         note: value.work_order_status_history.note,
         quantity_produced: value.work_order_status_history.quantityProduced,
+        status_id: value.work_order_status_history.statusId,
         uuid: value.work_order_status_history.uuid,
       })),
       updated_at: workOrder.work_orders.updatedAt,
@@ -241,14 +314,14 @@ export class WorkOrderService {
           await this.workOrderRepository.insertWorkOrderStatusHistory(statusHistory, tx);
           const prevStatusHistory = await this.workOrderRepository.getLastWorkOrderStatusHistoryByWoId(validatedData.work_order_id);
           await this.workOrderRepository.updateWorkOrderStatusHistoryById(prevStatusHistory!.id, {
-            executeTimeSeconds: getSecondsBetweenDates(currentWorkOrder.updatedAt, new Date()),
+            executeTimeSeconds: differenceInSeconds(new Date(), prevStatusHistory!.createdAt),
           });
         }
         const workOrder: Partial<InsertWorkOrder> = {
           currentStatusId: validatedData.status_id,
           operatorId: validatedData.operator_id,
           // * if work order (completed) => also set actual completion date and actual produced quantity
-          ...(validatedData.status_id === 3 ? { actualCompletionDate: dateNowWithUtcPlus7() } : {}),
+          ...(validatedData.status_id === 3 ? { actualCompletionDate: new Date() } : {}),
           ...(validatedData.status_id === 3 ? { actualQuantity: validatedData.quantity_produced } : {}),
         };
         await this.workOrderRepository.updateWorkOrderById(validatedData.work_order_id, workOrder, tx);
@@ -298,13 +371,13 @@ export class WorkOrderService {
           await this.workOrderRepository.insertWorkOrderStatusHistory(statusHistory, tx);
           const prevStatusHistory = await this.workOrderRepository.getLastWorkOrderStatusHistoryByWoId(validatedData.work_order_id);
           await this.workOrderRepository.updateWorkOrderStatusHistoryById(prevStatusHistory!.id, {
-            executeTimeSeconds: getSecondsBetweenDates(currentWorkOrder.updatedAt, new Date()),
+            executeTimeSeconds: differenceInSeconds(new Date(), prevStatusHistory!.createdAt),
           });
         }
         const workOrder: Partial<InsertWorkOrder> = {
           currentStatusId: validatedData.status_id,
           // * if work order (completed) => also set actual completion date and actual produced quantity
-          ...(validatedData.status_id === 3 ? { actualCompletionDate: dateNowWithUtcPlus7() } : {}),
+          ...(validatedData.status_id === 3 ? { actualCompletionDate: new Date() } : {}),
           ...(validatedData.status_id === 3 ? { actualQuantity: validatedData.quantity_produced } : {}),
         };
         await this.workOrderRepository.updateWorkOrderById(validatedData.work_order_id, workOrder, tx);

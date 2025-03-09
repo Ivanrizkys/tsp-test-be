@@ -41,3 +41,11 @@ export const GetWorkOrderParamsSchema = z.object({
   per_page: z.number({ message: "Per page must be a number" }).min(1, { message: "Per page must be greater than 0" }),
   status_id: z.number({ message: "Status id must be a number" }).min(1, { message: "Status id must be greater than 0" }).optional(),
 });
+
+export const DeleteWorkOrderBulkRequestSchema = z.object({
+  work_order_ids: z.array(z.number({ message: "Must be array of number" })).nonempty({ message: "Array can't be empty" }),
+});
+
+export const DeleteWorkOrderParamsSchema = z.object({
+  work_order_id: z.number({ message: "Work order ID must be a number" }).min(1, { message: "Work order ID must be greater than 0" }),
+});

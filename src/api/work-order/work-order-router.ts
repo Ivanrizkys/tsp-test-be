@@ -13,6 +13,8 @@ const workOrderController = new WorkOrderController(workOrderService);
 export const workOrderRouter = Router();
 
 workOrderRouter.get("/", authenticate, authorize(["view_wo"]), workOrderController.getWorkOrders);
+workOrderRouter.get("/status", authenticate, workOrderController.getWorkOrderStatuses);
+workOrderRouter.get("/operator-report", authenticate, authorize(["view_wo_report"]), workOrderController.getOperatorWorkOrderStats);
 workOrderRouter.get("/:workOrderId", authenticate, authorize(["view_wo"]), workOrderController.getWorkOrderDetail);
 workOrderRouter.post("/", authenticate, authorize(["create_wo"]), workOrderController.createWorkOrder);
 workOrderRouter.patch(
@@ -22,4 +24,5 @@ workOrderRouter.patch(
   workOrderController.updateWorkOrderManager,
 );
 workOrderRouter.patch("/:workOrderId/operator-update", authenticate, authorize(["update_wo_status"]), workOrderController.updateWorkOrderOperator);
-workOrderRouter.get("/status", authenticate, workOrderController.getWorkOrderStatuses);
+workOrderRouter.delete("/bulk", authenticate, authorize(["delete_wo"]), workOrderController.deleteBulkWorkOrder);
+workOrderRouter.delete("/:workOrderId", authenticate, authorize(["delete_wo"]), workOrderController.deleteWorkOrder);

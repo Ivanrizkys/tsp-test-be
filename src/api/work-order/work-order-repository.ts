@@ -14,7 +14,8 @@ import {
   workOrderTable,
 } from "#/common/config/database/schema.js";
 import { takeUniqueOrThrow } from "#/common/utils/index.js";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { endOfDay, startOfDay } from "date-fns";
+import { and, asc, between, desc, eq, inArray, sql } from "drizzle-orm";
 
 export class WorkOrderRepository {
   private readonly DB: DB;
@@ -27,7 +28,7 @@ export class WorkOrderRepository {
     const result = await this.DB.$count(
       workOrderTable,
       and(
-        createdAt ? eq(workOrderTable.createdAt, createdAt) : undefined,
+        createdAt ? between(workOrderTable.createdAt, startOfDay(createdAt), endOfDay(createdAt)) : undefined,
         statusId ? eq(workOrderTable.currentStatusId, statusId) : undefined,
         operatorId ? eq(workOrderTable.operatorId, operatorId) : undefined,
       ),
@@ -42,13 +43,22 @@ export class WorkOrderRepository {
     const result = await this.DB.insert(workOrderTable).values(workOrder).returning();
     return takeUniqueOrThrow("Created work order")(result)!;
   }
+  async deleteWorkorderBulkById(workOrderIds: number[], transaction?: DBTransaction): Promise<WorkOrder[]> {
+    const db = transaction ?? this.DB;
+    const result = await db.delete(workOrderTable).where(inArray(workOrderTable.id, workOrderIds)).returning();
+    return result;
+  }
   async deleteWorkOrderById(id: number, transaction?: DBTransaction): Promise<WorkOrder> {
     const db = transaction ?? this.DB;
     const result = await db.delete(workOrderTable).where(eq(workOrderTable.id, id)).returning();
     return takeUniqueOrThrow("Delete work order by id")(result)!;
   }
-  async getInProgressHistoryByWoId(workOrderId: number): Promise<WorkOrderInProgressHistory[]> {
-    const result = await this.DB.select().from(workOrderInProgressHistoryTable).where(eq(workOrderInProgressHistoryTable.workOrderId, workOrderId));
+  async getInProgressHistoryByWoIdWithUser(workOrderId: number) {
+    const result = await this.DB.select()
+      .from(workOrderInProgressHistoryTable)
+      .where(eq(workOrderInProgressHistoryTable.workOrderId, workOrderId))
+      .orderBy(asc(workOrderInProgressHistoryTable.createdAt))
+      .leftJoin(usersTable, eq(workOrderInProgressHistoryTable.createdBy, usersTable.id));
     return result;
   }
   async getLastWorkOrderStatusHistoryByWoId(id: number): Promise<null | WorkOrderStatusHistory> {
@@ -68,6 +78,7 @@ export class WorkOrderRepository {
     const result = await this.DB.select()
       .from(workOrderStatusHistoryTable)
       .where(eq(workOrderStatusHistoryTable.workOrderId, workOrderId))
+      .orderBy(asc(workOrderStatusHistoryTable.createdAt))
       .leftJoin(usersTable, eq(workOrderStatusHistoryTable.createdBy, usersTable.id));
     return result;
   }
@@ -88,6 +99,10 @@ export class WorkOrderRepository {
       .leftJoin(usersTable, eq(workOrderTable.operatorId, usersTable.id))
       .leftJoin(workOrderStatusTable, eq(workOrderTable.currentStatusId, workOrderStatusTable.id));
     return takeUniqueOrThrow("Get work order by id")(result);
+  }
+  async getWorkOrderByIds(ids: number[]): Promise<null | WorkOrder[]> {
+    const result = await this.DB.select().from(workOrderTable).where(inArray(workOrderTable.id, ids));
+    return result;
   }
   async getWorkOrderByIdWithOperatorAndStatus(id: number) {
     const result = await this.DB.select()
@@ -125,16 +140,46 @@ export class WorkOrderRepository {
     const result = await db.insert(workOrderStatusHistoryTable).values(workOrderStatusHistory).returning();
     return takeUniqueOrThrow("Insert work order status history")(result)!;
   }
+  async operatorWorkOrderStats() {
+    const result = await db
+      .select({
+        canceledCount: sql<number>`
+        COALESCE(COUNT(CASE WHEN ${workOrderStatusHistoryTable.statusId} = 4 THEN 1 END), 0)::integer
+      `,
+        completedCount: sql<number>`
+        COALESCE(COUNT(CASE WHEN ${workOrderStatusHistoryTable.statusId} = 3 THEN 1 END), 0)::integer
+      `,
+        email: usersTable.email,
+        id: usersTable.id,
+        inProgressCount: sql<number>`
+        COALESCE(COUNT(CASE WHEN ${workOrderStatusHistoryTable.statusId} = 2 THEN 1 END), 0)::integer
+      `,
+        name: usersTable.name,
+        pendingCount: sql<number>`
+        COALESCE(COUNT(CASE WHEN ${workOrderStatusHistoryTable.statusId} = 1 THEN 1 END), 0)::integer
+      `,
+        totalCount: sql<number>`
+        COUNT(${workOrderStatusHistoryTable.id})::integer
+      `,
+        uuid: usersTable.uuid,
+      })
+      .from(usersTable)
+      .leftJoin(workOrderStatusHistoryTable, eq(usersTable.id, workOrderStatusHistoryTable.createdBy))
+      .where(eq(usersTable.roleId, 2))
+      .groupBy(usersTable.id, usersTable.uuid, usersTable.name, usersTable.email);
+    return result;
+  }
   async searchWorkOrder(limit: number, offset: number, createdAt?: Date, statusId?: number, operatorId?: number) {
     const result = await this.DB.select()
       .from(workOrderTable)
       .where(
         and(
-          createdAt ? sql`${workOrderTable.createdAt} = ${new Date(createdAt).toISOString().replace("T", " ").replace("Z", "")}` : undefined,
+          createdAt ? between(workOrderTable.createdAt, startOfDay(createdAt), endOfDay(createdAt)) : undefined,
           statusId ? eq(workOrderTable.currentStatusId, statusId) : undefined,
           operatorId ? eq(workOrderTable.operatorId, operatorId) : undefined,
         ),
       )
+      .orderBy(desc(workOrderTable.createdAt))
       .leftJoin(usersTable, eq(workOrderTable.operatorId, usersTable.id))
       .leftJoin(workOrderStatusTable, eq(workOrderTable.currentStatusId, workOrderStatusTable.id))
       .limit(limit)
