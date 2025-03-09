@@ -19,15 +19,15 @@ export class AuthService {
     const validatedRequest = Validate(LoginRequestSchema, request);
     const user = await this.authRepository.getUserByEmail(validatedRequest.email);
     if (!user) {
-      throw new ResponseError(401, "Invalid email or password");
+      throw new ResponseError(400, "Invalid email or password");
     }
     const res = await bcrypt.compare(validatedRequest.password, user.password);
     if (!res) {
-      throw new ResponseError(401, "Invalid email or password");
+      throw new ResponseError(400, "Invalid email or password");
     }
     const userRole = await this.authRepository.getUserRoleById(user.roleId);
     if (!userRole) {
-      throw new ResponseError(401, "Invalid email or password");
+      throw new ResponseError(400, "Invalid email or password");
     }
     const claims: DecodedToken = {
       email: user.email,
@@ -43,6 +43,7 @@ export class AuthService {
         email: user.email,
         id: user.id,
         name: user.name,
+        role: userRole.id,
       },
     };
   }
