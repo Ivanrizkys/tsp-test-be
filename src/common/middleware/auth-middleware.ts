@@ -1,6 +1,7 @@
 import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
 
+import { ENV } from "../config/env.js";
 import { ResponseError } from "../error/response-error.js";
 import { DecodedToken, UserRequest } from "../model/index.js";
 
@@ -18,7 +19,7 @@ export const authenticate = (req: UserRequest, res: Response, next: NextFunction
       throw new ResponseError(401, "Token must be Bearer type");
     }
     try {
-      const decoded = jwt.verify(splitToken[1], process.env.JWT_SECRET!);
+      const decoded = jwt.verify(splitToken[1], ENV.JWT_SECRET!);
       req.user = decoded as DecodedToken;
       next();
     } catch (error) {

@@ -1,3 +1,4 @@
+import { ENV } from "#/common/config/env.js";
 import { ResponseError } from "#/common/error/response-error.js";
 import { DecodedToken } from "#/common/model/index.js";
 import { Validate } from "#/common/utils/validation.js";
@@ -36,7 +37,7 @@ export class AuthService {
       permissions: userRole.permissions,
       role: userRole.id,
     };
-    const token = jwt.sign(claims, process.env.JWT_SECRET!, { expiresIn: "6h" });
+    const token = jwt.sign(claims, ENV.JWT_SECRET!, { expiresIn: "6h" });
     return {
       token,
       user: {
